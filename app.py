@@ -128,10 +128,33 @@ def generate_ai_response(
         raise
 
 
-# Inject clean, modern styles for sidebar conversation items (ChatGPT-like)
+# Inject clean, modern styles for sidebar conversation items and hide developer toolbar
 st.markdown(
     """
     <style>
+    /* Hide Streamlit top-right developer menu, Deploy button, and footer */
+    #MainMenu {
+        display: none !important;
+        visibility: hidden !important;
+    }
+    footer {
+        display: none !important;
+        visibility: hidden !important;
+    }
+    .stDeployButton {
+        display: none !important;
+    }
+    [data-testid="stToolbar"] {
+        display: none !important;
+        visibility: hidden !important;
+    }
+    [data-testid="stDecoration"] {
+        display: none !important;
+    }
+    [data-testid="stStatusWidget"] {
+        display: none !important;
+    }
+
     /* Modern sidebar conversation item styling */
     [data-testid="stSidebar"] div[data-testid="stHorizontalBlock"] {
         align-items: center;
@@ -159,16 +182,29 @@ st.markdown(
         font-size: 0.9rem;
         border-radius: 6px;
     }
-    /* Minimalist dot menu button */
-    [data-testid="stSidebar"] div[data-testid="stPopover"] button {
-        border: none;
-        background: transparent;
-        padding: 0.2rem 0.4rem;
-        color: gray;
+
+    /* Clean ':' option button without arrow */
+    [data-testid="stSidebar"] [data-testid="stPopover"] button {
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        padding: 0.1rem 0.4rem !important;
+        color: #999999 !important;
+        font-size: 1.15rem !important;
+        font-weight: bold !important;
+        line-height: 1 !important;
+        min-height: unset !important;
     }
-    [data-testid="stSidebar"] div[data-testid="stPopover"] button:hover {
-        background: rgba(128, 128, 128, 0.15);
-        color: inherit;
+    [data-testid="stSidebar"] [data-testid="stPopover"] button:hover {
+        background: rgba(128, 128, 128, 0.15) !important;
+        color: inherit !important;
+    }
+    /* Completely hide the dropdown chevron SVG arrow */
+    [data-testid="stSidebar"] [data-testid="stPopover"] svg,
+    [data-testid="stSidebar"] [data-testid="stPopover"] button svg {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
     }
     </style>
     """,
@@ -217,7 +253,7 @@ with st.sidebar:
                     st.rerun()
 
             with col_dots:
-                with st.popover("⋮", help="Options"):
+                with st.popover(":", help="Options"):
                     st.caption("Session Options")
                     new_name = st.text_input("Rename", value=s["title"], key=f"ren_input_{s_id}")
                     if st.button("Save", key=f"save_btn_{s_id}", use_container_width=True):
