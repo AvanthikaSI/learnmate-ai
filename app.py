@@ -76,8 +76,12 @@ def generate_ai_response(
 ) -> str:
     """
     Calls Google GenAI SDK with multi-turn conversation history.
+    Specifies api_version='v1beta' to enable system / developer instructions.
     """
-    client = genai.Client(api_key=api_key)
+    client = genai.Client(
+        api_key=api_key,
+        http_options=types.HttpOptions(api_version="v1beta")
+    )
     contents = []
 
     # Inject recent conversation history for multi-turn learning context
@@ -93,15 +97,35 @@ def generate_ai_response(
     # Append the new prompt
     contents.append(types.Content(role="user", parts=[types.Part.from_text(text=prompt_text)]))
 
-    response = client.models.generate_content(
-        model=model_name,
-        contents=contents,
-        config=types.GenerateContentConfig(
-            system_instruction=system_prompt,
-            temperature=0.7,
+    try:
+        response = client.models.generate_content(
+            model=model_name,
+            contents=contents,
+            config=types.GenerateContentConfig(
+                system_instruction=system_prompt,
+                temperature=0.7,
+            )
         )
-    )
-    return response.text
+        return response.text
+    except APIError as e:
+        # Fallback if an endpoint ever restricts system instructions
+        if "Developer instruction is not enabled" in str(e):
+            fallback_contents = []
+            if system_prompt:
+                fallback_contents.append(
+                    types.Content(role="user", parts=[types.Part.from_text(text=f"[System Instruction]: {system_prompt}")])
+                )
+                fallback_contents.append(
+                    types.Content(role="model", parts=[types.Part.from_text(text="Understood. I will act as LearnMate AI according to these instructions.")])
+                )
+            fallback_contents.extend(contents)
+            response = client.models.generate_content(
+                model=model_name,
+                contents=fallback_contents,
+                config=types.GenerateContentConfig(temperature=0.7)
+            )
+            return response.text
+        raise
 
 
 # ---------------------------------------------------------
