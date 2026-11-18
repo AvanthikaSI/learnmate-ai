@@ -90,7 +90,7 @@ class TestLearnMateAI(unittest.TestCase):
         # Test activities
         p_concept = prompts.build_prompt("Explain Concept", "Binary Search")
         self.assertIn("Binary Search", p_concept)
-        self.assertIn("TL;DR", p_concept)
+        self.assertIn("Quick Summary", p_concept)
         self.assertIn("Analogy", p_concept)
 
         p_quiz = prompts.build_prompt("Generate Quiz", "Recursion")

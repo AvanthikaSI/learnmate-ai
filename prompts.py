@@ -24,13 +24,13 @@ The student wants to learn about: **{topic}**
 
 Please provide a comprehensive yet beginner-friendly conceptual explanation structured as follows:
 
-1. **Quick Summary (TL;DR)**: A 2-sentence summary explaining what {topic} is in simple terms.
+1. **Quick Summary**: A 2-sentence summary explaining what {topic} is in simple terms.
 2. **The Core Concept**: Break down how it works step-by-step. Explain the mechanics clearly.
 3. **Intuitive Analogy**: Compare {topic} to a familiar real-world object, system, or routine.
 4. **Key Components / Terminology**: 3-5 essential terms or pillars a student must know.
 5. **Key Takeaways**: A quick bulleted checklist summarizing what to remember.
 
-Do not include emojis.
+Do not use the term 'TL;DR' or 'TL DR'. Do not include emojis.
 """
 
 # Template for real-life examples

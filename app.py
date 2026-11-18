@@ -128,6 +128,53 @@ def generate_ai_response(
         raise
 
 
+# Inject clean, modern styles for sidebar conversation items (ChatGPT-like)
+st.markdown(
+    """
+    <style>
+    /* Modern sidebar conversation item styling */
+    [data-testid="stSidebar"] div[data-testid="stHorizontalBlock"] {
+        align-items: center;
+        gap: 0.25rem;
+        margin-bottom: 0.2rem;
+    }
+    [data-testid="stSidebar"] div[data-testid="stHorizontalBlock"] button[kind="secondary"] {
+        text-align: left;
+        justify-content: flex-start;
+        border: none;
+        background: transparent;
+        color: inherit;
+        padding: 0.4rem 0.6rem;
+        font-size: 0.9rem;
+        border-radius: 6px;
+    }
+    [data-testid="stSidebar"] div[data-testid="stHorizontalBlock"] button[kind="secondary"]:hover {
+        background: rgba(128, 128, 128, 0.12);
+        border: none;
+    }
+    [data-testid="stSidebar"] div[data-testid="stHorizontalBlock"] button[kind="primary"] {
+        text-align: left;
+        justify-content: flex-start;
+        padding: 0.4rem 0.6rem;
+        font-size: 0.9rem;
+        border-radius: 6px;
+    }
+    /* Minimalist dot menu button */
+    [data-testid="stSidebar"] div[data-testid="stPopover"] button {
+        border: none;
+        background: transparent;
+        padding: 0.2rem 0.4rem;
+        color: gray;
+    }
+    [data-testid="stSidebar"] div[data-testid="stPopover"] button:hover {
+        background: rgba(128, 128, 128, 0.15);
+        color: inherit;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 # ---------------------------------------------------------
 # Sidebar: Navigation & Session History
 # ---------------------------------------------------------
@@ -156,33 +203,31 @@ with st.sidebar:
         for s in all_sessions:
             s_id = s["id"]
             is_active = (st.session_state.current_session_id == s_id)
-            btn_label = f"[Active] {s['title'][:22]}" if is_active else s['title'][:26]
-            
-            col_open, col_del = st.columns([4, 1])
-            with col_open:
-                if st.button(btn_label, key=f"session_btn_{s_id}", use_container_width=True):
+            title_display = s["title"][:24]
+
+            col_chat, col_dots = st.columns([5, 1])
+            with col_chat:
+                if st.button(
+                    title_display,
+                    key=f"session_btn_{s_id}",
+                    use_container_width=True,
+                    type="primary" if is_active else "secondary"
+                ):
                     st.session_state.current_session_id = s_id
-                    st.session_state.confirm_delete_id = None
-                    st.rerun()
-            with col_del:
-                if st.button("X", key=f"del_btn_{s_id}", help=f"Delete: {s['title']}"):
-                    st.session_state.confirm_delete_id = s_id
                     st.rerun()
 
-            # Handle deletion confirmation
-            if st.session_state.confirm_delete_id == s_id:
-                st.warning(f"Delete '{s['title'][:20]}'?")
-                c_yes, c_no = st.columns(2)
-                with c_yes:
-                    if st.button("Delete", key=f"conf_yes_{s_id}", type="primary"):
+            with col_dots:
+                with st.popover("⋮", help="Options"):
+                    st.caption("Session Options")
+                    new_name = st.text_input("Rename", value=s["title"], key=f"ren_input_{s_id}")
+                    if st.button("Save", key=f"save_btn_{s_id}", use_container_width=True):
+                        if new_name.strip():
+                            database.update_session_title(s_id, new_name)
+                            st.rerun()
+                    if st.button("Delete", key=f"del_btn_{s_id}", type="primary", use_container_width=True):
                         database.delete_session(s_id)
                         if st.session_state.current_session_id == s_id:
                             st.session_state.current_session_id = None
-                        st.session_state.confirm_delete_id = None
-                        st.rerun()
-                with c_no:
-                    if st.button("Cancel", key=f"conf_no_{s_id}"):
-                        st.session_state.confirm_delete_id = None
                         st.rerun()
 
 
@@ -204,56 +249,42 @@ if current_id and not current_session:
 if current_session:
     interactions = database.get_interactions_for_session(current_session["id"])
     
-    # Header & Meta Row
-    col_title, col_edit = st.columns([4, 1])
-    with col_title:
+    # Header: Title and topic on left, metadata and export option on right
+    col_left, col_right = st.columns([3, 2])
+    with col_left:
         st.title(current_session["title"])
-        st.caption(f"Topic: {current_session['topic']} | Created: {current_session['created_at']} | Interactions: {len(interactions)}")
+        st.caption(f"Topic: {current_session['topic']}")
 
-    with col_edit:
-        with st.popover("Rename"):
-            new_title = st.text_input("Session Title:", value=current_session["title"])
-            if st.button("Save Title"):
-                if new_title.strip():
-                    database.update_session_title(current_session["id"], new_title)
-                    st.rerun()
-
-    # Export Section
-    with st.expander("Export Study Notes (Markdown, Text, PDF)", expanded=False):
-        exp_col1, exp_col2, exp_col3 = st.columns(3)
-        
-        # Markdown Export
-        md_data = exporter.export_to_markdown(current_session, interactions)
-        with exp_col1:
-            st.download_button(
-                label="Download Markdown (.md)",
-                data=md_data,
-                file_name=f"learnmate_{current_session['topic'].lower().replace(' ', '_')}.md",
-                mime="text/markdown",
-                use_container_width=True
+    with col_right:
+        col_meta, col_exp = st.columns([3, 2])
+        with col_meta:
+            st.markdown(
+                f"<div style='text-align: right; color: gray; font-size: 0.85rem; padding-top: 14px;'>"
+                f"Created: {current_session['created_at']}<br>Interactions: {len(interactions)}"
+                f"</div>",
+                unsafe_allow_html=True
             )
-        
-        # Text Export
-        txt_data = exporter.export_to_txt(current_session, interactions)
-        with exp_col2:
-            st.download_button(
-                label="Download Plain Text (.txt)",
-                data=txt_data,
-                file_name=f"learnmate_{current_session['topic'].lower().replace(' ', '_')}.txt",
-                mime="text/plain",
-                use_container_width=True
-            )
-
-        # PDF Export
-        pdf_bytes = exporter.export_to_pdf(current_session, interactions)
-        with exp_col3:
-            st.download_button(
-                label="Download PDF (.pdf)",
-                data=pdf_bytes,
-                file_name=f"learnmate_{current_session['topic'].lower().replace(' ', '_')}.pdf",
-                mime="application/pdf",
-                use_container_width=True
-            )
+        with col_exp:
+            st.markdown("<div style='padding-top: 12px;'>", unsafe_allow_html=True)
+            with st.popover("Export", use_container_width=True):
+                st.caption("Export Notes")
+                txt_data = exporter.export_to_txt(current_session, interactions)
+                st.download_button(
+                    label="Text (.txt)",
+                    data=txt_data,
+                    file_name=f"{current_session['topic'].lower().replace(' ', '_')}.txt",
+                    mime="text/plain",
+                    use_container_width=True
+                )
+                pdf_bytes = exporter.export_to_pdf(current_session, interactions)
+                st.download_button(
+                    label="PDF (.pdf)",
+                    data=pdf_bytes,
+                    file_name=f"{current_session['topic'].lower().replace(' ', '_')}.pdf",
+                    mime="application/pdf",
+                    use_container_width=True
+                )
+            st.markdown("</div>", unsafe_allow_html=True)
 
     st.divider()
 
@@ -402,7 +433,7 @@ if current_session:
 # =========================================================
 else:
     st.title("LearnMate AI")
-    st.caption("AI-guided learning assistant for any topic.")
+    st.caption("AI-guided learning assistant")
     st.divider()
 
     st.subheader("Start a New Learning Session")
