@@ -48,7 +48,7 @@ def export_to_markdown(session: Dict[str, Any], interactions: List[Dict[str, Any
     Converts a session and its interactions into clean Markdown format.
     """
     md = []
-    md.append("# 🎓 LearnMate AI - Learning Session Notes")
+    md.append("# LearnMate AI - Learning Session Notes")
     md.append(f"**Topic:** {session.get('topic', 'General')}")
     md.append(f"**Title:** {session.get('title', 'Untitled Session')}")
     md.append(f"**Created:** {session.get('created_at', '')}")
@@ -58,13 +58,13 @@ def export_to_markdown(session: Dict[str, Any], interactions: List[Dict[str, Any
     for idx, item in enumerate(interactions, 1):
         md.append(f"## {idx}. {item.get('activity', 'Interaction')}")
         md.append(f"*Timestamp: {item.get('created_at', '')}*\n")
-        md.append("### ❓ Prompt / Question")
+        md.append("### Prompt / Question")
         md.append(f"> {item.get('user_prompt', '').strip()}\n")
-        md.append("### 🤖 LearnMate Response")
+        md.append("### LearnMate Response")
         md.append(f"{item.get('ai_response', '').strip()}\n")
         md.append("\n---\n")
 
-    md.append("\n*Generated with LearnMate AI — Learn smarter, one concept at a time.*")
+    md.append("\n*Generated with LearnMate AI.*")
     return "\n".join(md)
 
 

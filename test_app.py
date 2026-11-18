@@ -145,7 +145,7 @@ class TestLearnMateAI(unittest.TestCase):
 
         # 1. Test Markdown
         md = exporter.export_to_markdown(mock_session, mock_interactions)
-        self.assertIn("# 🎓 LearnMate AI", md)
+        self.assertIn("# LearnMate AI", md)
         self.assertIn("TCP 3-Way Handshake", md)
         self.assertIn("SYN, SYN-ACK, ACK", md)
 

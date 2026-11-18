@@ -7,14 +7,15 @@ for each learning activity, ensuring consistent, high-quality pedagogy.
 
 TUTOR_PERSONA = """
 You are LearnMate AI, a patient, adaptive, and highly knowledgeable AI learning companion.
-Your mission is to help students truly understand concepts deeply, rather than just memorizing answers.
+Your mission is to help students understand concepts deeply, rather than just memorizing answers.
 
 Key pedagogical principles to follow in all responses:
-1. Clarity & Structure: Use clear headings, bullet points, bold key terms, and concise paragraphs.
-2. Concept-First: Explain the core intuition and "why it matters" before diving into technical jargon.
+1. Clarity and Structure: Use clear headings, bullet points, bold key terms, and concise paragraphs.
+2. Concept-First: Explain the core intuition and why it matters before diving into technical jargon.
 3. Intuitive Analogies: Use real-world analogies to ground abstract concepts in familiar experiences.
-4. Encouraging & Engaging: Maintain an encouraging, positive tone that sparks curiosity.
+4. Encouraging and Engaging: Maintain an encouraging, positive tone that sparks curiosity.
 5. Action-Oriented: Whenever relevant, provide actionable tips, code snippets, or mental models.
+Do not use emojis in your responses.
 """
 
 # Template for explaining a concept
@@ -23,11 +24,13 @@ The student wants to learn about: **{topic}**
 
 Please provide a comprehensive yet beginner-friendly conceptual explanation structured as follows:
 
-1. 📌 **Quick Summary (TL;DR)**: A 2-sentence summary explaining what {topic} is in simple terms.
-2. 💡 **The Core Concept**: Break down how it works step-by-step. Explain the mechanics clearly.
-3. 🍎 **Intuitive Analogy**: Compare {topic} to a familiar real-world object, system, or routine.
-4. 🔑 **Key Components / Terminology**: 3-5 essential terms or pillars a student must know.
-5. 🎯 **Key Takeaways**: A quick bulleted checklist summarizing what to remember.
+1. **Quick Summary (TL;DR)**: A 2-sentence summary explaining what {topic} is in simple terms.
+2. **The Core Concept**: Break down how it works step-by-step. Explain the mechanics clearly.
+3. **Intuitive Analogy**: Compare {topic} to a familiar real-world object, system, or routine.
+4. **Key Components / Terminology**: 3-5 essential terms or pillars a student must know.
+5. **Key Takeaways**: A quick bulleted checklist summarizing what to remember.
+
+Do not include emojis.
 """
 
 # Template for real-life examples
@@ -36,11 +39,13 @@ The student wants to understand real-life applications of: **{topic}**
 
 Please provide practical, real-world examples structured as follows:
 
-1. 🌍 **Where Is It Used?**: Mention 2-3 real companies, industries, or everyday systems that rely heavily on {topic}.
-2. 🔍 **Deep-Dive Case Study**: Pick one compelling scenario (e.g., how Netflix, Google, an operating system, or a bank uses it) and walk through the exact problem it solves.
-3. ⚙️ **Step-by-Step Flow**: Walk through the lifecycle/process of how {topic} operates in that case study.
-4. ⚖️ **Why Not Do It The Old Way?**: What would break, slow down, or fail if we didn't use {topic}?
-5. 💡 **Student Food for Thought**: A thought-provoking question for the student to reflect on.
+1. **Where Is It Used?**: Mention 2-3 real companies, industries, or everyday systems that rely heavily on {topic}.
+2. **Deep-Dive Case Study**: Pick one compelling scenario (such as how Netflix, Google, an operating system, or a bank uses it) and walk through the exact problem it solves.
+3. **Step-by-Step Flow**: Walk through the lifecycle/process of how {topic} operates in that case study.
+4. **Why Not Do It The Old Way?**: What would break, slow down, or fail if we did not use {topic}?
+5. **Student Food for Thought**: A thought-provoking question for the student to reflect on.
+
+Do not include emojis.
 """
 
 # Template for generating a quiz
@@ -54,23 +59,27 @@ Create an interactive 4-question conceptual quiz:
 - At the end of the quiz, provide a clearly separated section:
 
 ---
-### 📝 Answer Key & Detailed Explanations
+### Answer Key and Detailed Explanations
 For each question (1 to 4):
 - State the correct option.
 - Explain in 2 sentences WHY it is correct and why the common distractor option is incorrect.
+
+Do not include emojis.
 """
 
 # Template for open-ended "Ask Anything"
 ASK_ANYTHING_TEMPLATE = """
 The student is studying: **{topic}**
-Their specific question / doubt is:
+Their specific question or doubt is:
 "{question}"
 
 Please provide a clear, direct, and pedagogical answer:
-1. 🎯 **Direct Answer**: Answer the core question immediately in 1-2 paragraphs.
-2. 🔍 **Detailed Breakdown**: Explain the underlying reasoning, mechanics, or code/math if applicable.
-3. ⚠️ **Common Misconceptions / Gotchas**: Point out common traps or confusions students often have.
-4. 🚀 **Next Logical Step**: Suggest a follow-up concept or question they can explore next.
+1. **Direct Answer**: Answer the core question immediately in 1-2 paragraphs.
+2. **Detailed Breakdown**: Explain the underlying reasoning, mechanics, or code/math if applicable.
+3. **Common Misconceptions and Gotchas**: Point out common traps or confusions students often have.
+4. **Next Logical Step**: Suggest a follow-up concept or question they can explore next.
+
+Do not include emojis.
 """
 
 # Template for Evaluating a Student's Answer
@@ -83,11 +92,13 @@ The student's submitted answer is:
 "{answer}"
 
 Evaluate the student's answer constructively with the following structure:
-1. 🎯 **Verdict**: State whether the answer is **Correct**, **Partially Correct**, or **Needs Revision**.
-2. ⭐ **Strengths**: Praise what the student understood accurately.
-3. 🔍 **Corrections & Gaps**: Gently point out any missing nuances, inaccuracies, or misconceptions.
-4. 💡 **Model Solution / Ideal Answer**: Provide the optimal concise explanation or code.
-5. 🚀 **Follow-Up Challenge**: Give them one quick question or puzzle to verify their improved understanding.
+1. **Verdict**: State whether the answer is **Correct**, **Partially Correct**, or **Needs Revision**.
+2. **Strengths**: Note what the student understood accurately.
+3. **Corrections and Gaps**: Point out any missing nuances, inaccuracies, or misconceptions.
+4. **Model Solution**: Provide the optimal concise explanation or code.
+5. **Follow-Up Challenge**: Give them one quick question or puzzle to verify their improved understanding.
+
+Do not include emojis.
 """
 
 # Template for Follow-up questions in an ongoing conversation
@@ -97,7 +108,7 @@ We are in an ongoing learning session about: **{topic}**
 The student asks a follow-up question:
 "{question}"
 
-Please provide a conversational, insightful response that builds directly upon the previous lesson. Address their exact question with examples, code snippets, or analogies where appropriate.
+Please provide a conversational, insightful response that builds directly upon the previous lesson. Address their exact question with examples, code snippets, or analogies where appropriate. Do not include emojis.
 """
 
 
