@@ -197,28 +197,45 @@ st.markdown(
         border-radius: 6px;
     }
 
-    /* Clean ':' option button without arrow */
+    /* Clean '...' option button without arrow */
+    [data-testid="stSidebar"] [data-testid="stPopoverButton"],
     [data-testid="stSidebar"] [data-testid="stPopover"] button {
         border: none !important;
         background: transparent !important;
         box-shadow: none !important;
         padding: 0.1rem 0.4rem !important;
-        color: #999999 !important;
-        font-size: 1.15rem !important;
+        color: #888888 !important;
+        font-size: 1.1rem !important;
         font-weight: bold !important;
         line-height: 1 !important;
         min-height: unset !important;
     }
+    [data-testid="stSidebar"] [data-testid="stPopoverButton"]:hover,
     [data-testid="stSidebar"] [data-testid="stPopover"] button:hover {
         background: rgba(128, 128, 128, 0.15) !important;
         color: inherit !important;
     }
-    /* Completely hide the dropdown chevron SVG arrow */
-    [data-testid="stSidebar"] [data-testid="stPopover"] svg,
-    [data-testid="stSidebar"] [data-testid="stPopover"] button svg {
+    /* Completely hide the dropdown chevron SVG / icon */
+    [data-testid="stSidebar"] [data-testid="stPopoverButton"] div[aria-hidden="true"],
+    [data-testid="stSidebar"] [data-testid="stPopoverButton"] [aria-hidden="true"],
+    [data-testid="stSidebar"] [data-testid="stPopoverButton"] svg,
+    [data-testid="stSidebar"] [data-testid="stPopoverButton"] span[data-testid="stIconMaterial"],
+    [data-testid="stSidebar"] [data-testid="stPopover"] svg {
         display: none !important;
         width: 0 !important;
         height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* Neutral, modern popover dialog styling */
+    [data-testid="stPopoverBody"] {
+        padding: 0.75rem !important;
+        border-radius: 8px !important;
+    }
+    [data-testid="stPopoverBody"] button {
+        border-radius: 6px !important;
+        font-size: 0.85rem !important;
     }
     </style>
     """,
@@ -267,18 +284,25 @@ with st.sidebar:
                     st.rerun()
 
             with col_dots:
-                with st.popover(":", help="Options"):
-                    st.caption("Session Options")
-                    new_name = st.text_input("Rename", value=s["title"], key=f"ren_input_{s_id}")
-                    if st.button("Save", key=f"save_btn_{s_id}", use_container_width=True):
-                        if new_name.strip():
-                            database.update_session_title(s_id, new_name)
+                with st.popover("...", help="Options"):
+                    new_name = st.text_input(
+                        "Rename",
+                        value=s["title"],
+                        label_visibility="collapsed",
+                        key=f"ren_input_{s_id}"
+                    )
+                    c_ren, c_del = st.columns(2)
+                    with c_ren:
+                        if st.button("Rename", key=f"save_btn_{s_id}", use_container_width=True):
+                            if new_name.strip():
+                                database.update_session_title(s_id, new_name)
+                                st.rerun()
+                    with c_del:
+                        if st.button("Delete", key=f"del_btn_{s_id}", use_container_width=True):
+                            database.delete_session(s_id)
+                            if st.session_state.current_session_id == s_id:
+                                st.session_state.current_session_id = None
                             st.rerun()
-                    if st.button("Delete", key=f"del_btn_{s_id}", type="primary", use_container_width=True):
-                        database.delete_session(s_id)
-                        if st.session_state.current_session_id == s_id:
-                            st.session_state.current_session_id = None
-                        st.rerun()
 
 
 # ---------------------------------------------------------
@@ -299,11 +323,10 @@ if current_id and not current_session:
 if current_session:
     interactions = database.get_interactions_for_session(current_session["id"])
     
-    # Header: Title and topic on left, metadata and export option on right
+    # Header: Title on left, metadata and export option on right
     col_left, col_right = st.columns([3, 2])
     with col_left:
         st.title(current_session["title"])
-        st.caption(f"Topic: {current_session['topic']}")
 
     with col_right:
         col_meta, col_exp = st.columns([3, 2])
@@ -346,12 +369,25 @@ if current_session:
             act_type = item["activity"]
 
             with st.container():
-                st.markdown(f"#### {idx}. {act_type}")
-                st.caption(f"Time: {item['created_at']}")
+                col_act_title, col_act_time = st.columns([3, 1])
+                with col_act_title:
+                    st.markdown(f"#### {idx}. {act_type}")
+                with col_act_time:
+                    st.markdown(
+                        f"<div style='text-align: right; color: gray; font-size: 0.85rem; padding-top: 6px;'>"
+                        f"{item['created_at']}"
+                        f"</div>",
+                        unsafe_allow_html=True
+                    )
                 
-                # Show user query if available
-                if item["user_prompt"].strip():
-                    st.chat_message("user").markdown(item["user_prompt"])
+                # Only show user chat bubble if user asked a specific question or answer
+                raw_prompt = item.get("user_prompt", "").strip()
+                if raw_prompt and not raw_prompt.startswith("Activity:"):
+                    st.chat_message("user").markdown(raw_prompt)
+                elif "Question:" in raw_prompt:
+                    actual_q = raw_prompt.split("Question:", 1)[-1].strip()
+                    if actual_q:
+                        st.chat_message("user").markdown(actual_q)
                 
                 # Show AI response
                 st.chat_message("assistant").markdown(item["ai_response"])
@@ -412,11 +448,13 @@ if current_session:
                     answer=act_answer
                 )
                 
-                user_record_text = f"Activity: {next_activity}"
-                if act_question:
-                    user_record_text += f"\nQuestion: {act_question}"
-                if act_answer:
-                    user_record_text += f"\nMy Answer: {act_answer}"
+                user_record_text = ""
+                if act_question and act_answer:
+                    user_record_text = f"{act_question}\n\nMy Answer: {act_answer}"
+                elif act_question:
+                    user_record_text = act_question
+                elif act_answer:
+                    user_record_text = f"My Answer: {act_answer}"
 
                 with st.spinner("Generating response..."):
                     try:
@@ -553,11 +591,13 @@ else:
                 answer=init_answer
             )
 
-            user_record_text = f"Activity: {initial_activity}"
-            if init_question:
-                user_record_text += f"\nQuestion: {init_question}"
-            if init_answer:
-                user_record_text += f"\nMy Answer: {init_answer}"
+            user_record_text = ""
+            if init_question and init_answer:
+                user_record_text = f"{init_question}\n\nMy Answer: {init_answer}"
+            elif init_question:
+                user_record_text = init_question
+            elif init_answer:
+                user_record_text = f"My Answer: {init_answer}"
 
             with st.spinner("Generating response..."):
                 try:

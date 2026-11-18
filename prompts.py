@@ -52,19 +52,28 @@ Do not include emojis.
 GENERATE_QUIZ_TEMPLATE = """
 The student wants to test their understanding of: **{topic}**
 
-Create an interactive 4-question conceptual quiz:
+Create an interactive 4-question conceptual quiz.
 
-- Include 4 Multiple Choice Questions (MCQs) ranging from foundational to scenario-based.
-- Format each question clearly with options (A, B, C, D).
-- At the end of the quiz, provide a clearly separated section:
+FORMATTING REQUIREMENTS:
+- Put the question text on its own line (e.g., '### Question 1: [Question text]').
+- Put EVERY option on its own separate line below the question. Do NOT combine options into a single paragraph or row.
+- Leave an empty line between each question.
+
+Example format for every question:
+
+### Question 1: [Question text]
+A) [First option]
+B) [Second option]
+C) [Third option]
+D) [Fourth option]
 
 ---
 ### Answer Key and Detailed Explanations
 For each question (1 to 4):
-- State the correct option.
-- Explain in 2 sentences WHY it is correct and why the common distractor option is incorrect.
+- State the correct option on its own line (e.g., **Correct Answer: B**).
+- Explain why it is correct and why the other options are incorrect.
 
-Do not include emojis.
+Do not include emojis. Do not use the term 'TL;DR' or 'TL DR'.
 """
 
 # Template for open-ended "Ask Anything"
