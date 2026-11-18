@@ -132,7 +132,7 @@ def generate_ai_response(
 st.markdown(
     """
     <style>
-    /* Hide Streamlit top-right developer menu, Deploy button, and footer */
+    /* Hide only the top-right developer menu, Deploy button, and footer */
     #MainMenu {
         display: none !important;
         visibility: hidden !important;
@@ -141,10 +141,11 @@ st.markdown(
         display: none !important;
         visibility: hidden !important;
     }
-    .stDeployButton {
+    .stDeployButton,
+    [data-testid="stAppDeployButton"] {
         display: none !important;
     }
-    [data-testid="stToolbar"] {
+    [data-testid="stToolbarActions"] {
         display: none !important;
         visibility: hidden !important;
     }
@@ -153,6 +154,19 @@ st.markdown(
     }
     [data-testid="stStatusWidget"] {
         display: none !important;
+    }
+
+    /* Ensure the sidebar toggle / open button is always visible and accessible */
+    [data-testid="stExpandSidebarButton"] {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        z-index: 999999 !important;
+    }
+    [data-testid="stSidebarCollapseButton"] {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
     }
 
     /* Modern sidebar conversation item styling */
