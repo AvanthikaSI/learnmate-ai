@@ -3,7 +3,9 @@ app.py - Main Streamlit Application for LearnMate AI.
 """
 
 import os
+import re
 import streamlit as st
+import streamlit.components.v1 as components
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
@@ -34,6 +36,9 @@ if "editing_session_id" not in st.session_state:
     st.session_state.editing_session_id = None
 if "confirm_delete_id" not in st.session_state:
     st.session_state.confirm_delete_id = None
+# Input-clear counters — incrementing the key forces Streamlit to re-mount the widget blank
+if "input_counter" not in st.session_state:
+    st.session_state.input_counter = 0
 
 # Default model configuration
 DEFAULT_MODEL = "gemini-2.5-flash"
@@ -128,10 +133,102 @@ def generate_ai_response(
         raise
 
 
+# ---------------------------------------------------------
+# Mermaid diagram renderer
+# ---------------------------------------------------------
+def render_response_with_diagrams(ai_text: str):
+    """
+    Parses the AI response for ```mermaid code blocks, renders them as
+    interactive diagrams via Mermaid.js, and renders the remaining prose
+    as standard markdown.
+    """
+    # Split on ```mermaid ... ``` blocks
+    parts = re.split(r"```mermaid\s*([\s\S]*?)```", ai_text)
+
+    for i, part in enumerate(parts):
+        if i % 2 == 0:
+            # Even index = plain markdown prose
+            if part.strip():
+                st.markdown(part)
+        else:
+            # Odd index = mermaid diagram definition
+            diagram_def = part.strip()
+            mermaid_html = f"""
+            <div style="background: transparent; border-radius: 8px; padding: 1rem 0;">
+              <div class="mermaid">
+{diagram_def}
+              </div>
+            </div>
+            <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+            <script>
+              mermaid.initialize({{
+                startOnLoad: true,
+                theme: 'dark',
+                themeVariables: {{
+                  primaryColor: '#1e3a5f',
+                  primaryTextColor: '#e0e0e0',
+                  lineColor: '#888',
+                  secondaryColor: '#2a2a2a',
+                  background: '#0e1117'
+                }}
+              }});
+            </script>
+            """
+            components.html(mermaid_html, height=380, scrolling=True)
+
+
 # Inject clean, modern styles for sidebar conversation items and hide developer toolbar
 st.markdown(
     """
     <style>
+    /* ---- Google Fonts: Inter (UI) + JetBrains Mono (code) + Material Icons ---- */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+    @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+    @import url('https://fonts.googleapis.com/icon?family=Material+Icons+Outlined');
+    @import url('https://fonts.googleapis.com/icon?family=Material+Icons+Round');
+
+    /* Apply Inter globally — but NOT on icon elements */
+    html, body, [class*="css"], [data-testid="stAppViewContainer"],
+    [data-testid="stSidebar"], .stMarkdown, .stTextInput, .stTextArea,
+    .stSelectbox, .stButton, .stCaption, .stSubheader,
+    h1, h2, h3, h4, h5, h6,
+    p, div, label, input, textarea, button, select, .stRadio,
+    [data-testid="stChatMessage"], [data-testid="stChatMessageContent"] {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+        letter-spacing: -0.01em;
+    }
+
+    /* Restore Material Icons font for ALL icon spans — prevents alt-text fallback */
+    span[data-testid="stIconMaterial"],
+    .material-icons,
+    .material-icons-outlined,
+    .material-icons-round,
+    [class*="material-icon"],
+    span[class*="Icon"] {
+        font-family: 'Material Icons', 'Material Icons Outlined', 'Material Icons Round' !important;
+        font-feature-settings: 'liga' !important;
+        -webkit-font-feature-settings: 'liga' !important;
+        font-style: normal !important;
+        letter-spacing: normal !important;
+        word-wrap: normal !important;
+        white-space: nowrap !important;
+        direction: ltr !important;
+        -webkit-font-smoothing: antialiased !important;
+    }
+
+    /* JetBrains Mono for code blocks only */
+    code, pre, .stCodeBlock, [data-testid="stCode"] * {
+        font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace !important;
+        letter-spacing: 0;
+        font-size: 0.88em;
+    }
+
+    /* Heading refinements — tighter tracking for Inter at large sizes */
+    h1 { font-weight: 700; letter-spacing: -0.03em; }
+    h2 { font-weight: 600; letter-spacing: -0.02em; }
+    h3 { font-weight: 600; letter-spacing: -0.015em; }
+    h4, h5, h6 { font-weight: 500; letter-spacing: -0.01em; }
+
     /* Hide only the top-right developer menu, Deploy button, and footer */
     #MainMenu {
         display: none !important;
@@ -169,32 +266,40 @@ st.markdown(
         opacity: 1 !important;
     }
 
-    /* Modern sidebar conversation item styling */
+    /* ---- Sidebar session list: compact, LEFT-aligned ---- */
     [data-testid="stSidebar"] div[data-testid="stHorizontalBlock"] {
         align-items: center;
-        gap: 0.25rem;
-        margin-bottom: 0.2rem;
+        gap: 0.15rem;
+        margin-bottom: 0.05rem;
+        padding: 0 !important;
+    }
+
+    /* Session title buttons — force text to left */
+    [data-testid="stSidebar"] div[data-testid="stHorizontalBlock"] button {
+        text-align: left !important;
+        justify-content: flex-start !important;
+        align-items: center !important;
+        font-size: 0.82rem;
+        border-radius: 5px;
+        padding: 0.3rem 0.5rem !important;
+        width: 100%;
     }
     [data-testid="stSidebar"] div[data-testid="stHorizontalBlock"] button[kind="secondary"] {
-        text-align: left;
-        justify-content: flex-start;
         border: none;
         background: transparent;
         color: inherit;
-        padding: 0.4rem 0.6rem;
-        font-size: 0.9rem;
-        border-radius: 6px;
     }
     [data-testid="stSidebar"] div[data-testid="stHorizontalBlock"] button[kind="secondary"]:hover {
         background: rgba(128, 128, 128, 0.12);
         border: none;
     }
-    [data-testid="stSidebar"] div[data-testid="stHorizontalBlock"] button[kind="primary"] {
-        text-align: left;
-        justify-content: flex-start;
-        padding: 0.4rem 0.6rem;
-        font-size: 0.9rem;
-        border-radius: 6px;
+
+    /* Inner button text/label: left-align explicitly */
+    [data-testid="stSidebar"] div[data-testid="stHorizontalBlock"] button p,
+    [data-testid="stSidebar"] div[data-testid="stHorizontalBlock"] button div,
+    [data-testid="stSidebar"] div[data-testid="stHorizontalBlock"] button span:not([data-testid="stIconMaterial"]) {
+        text-align: left !important;
+        width: 100% !important;
     }
 
     /* Clean '...' option button without arrow */
@@ -203,9 +308,9 @@ st.markdown(
         border: none !important;
         background: transparent !important;
         box-shadow: none !important;
-        padding: 0.1rem 0.4rem !important;
+        padding: 0.1rem 0.3rem !important;
         color: #888888 !important;
-        font-size: 1.1rem !important;
+        font-size: 1rem !important;
         font-weight: bold !important;
         line-height: 1 !important;
         min-height: unset !important;
@@ -215,7 +320,7 @@ st.markdown(
         background: rgba(128, 128, 128, 0.15) !important;
         color: inherit !important;
     }
-    /* Completely hide the dropdown chevron SVG / icon */
+    /* Completely hide the dropdown chevron SVG / icon on the popover trigger */
     [data-testid="stSidebar"] [data-testid="stPopoverButton"] div[aria-hidden="true"],
     [data-testid="stSidebar"] [data-testid="stPopoverButton"] [aria-hidden="true"],
     [data-testid="stSidebar"] [data-testid="stPopoverButton"] svg,
@@ -228,14 +333,22 @@ st.markdown(
         padding: 0 !important;
     }
 
-    /* Neutral, modern popover dialog styling */
+    /* Popover body — slim and clean */
     [data-testid="stPopoverBody"] {
-        padding: 0.75rem !important;
+        padding: 0.5rem !important;
         border-radius: 8px !important;
     }
     [data-testid="stPopoverBody"] button {
         border-radius: 6px !important;
-        font-size: 0.85rem !important;
+        font-size: 0.82rem !important;
+        width: 100% !important;
+        text-align: left !important;
+        margin-bottom: 0.2rem !important;
+    }
+
+    /* Quiz options: force block display so each option is on its own line */
+    [data-testid="stChatMessageContent"] p {
+        white-space: pre-wrap;
     }
     </style>
     """,
@@ -270,34 +383,47 @@ with st.sidebar:
         for s in all_sessions:
             s_id = s["id"]
             is_active = (st.session_state.current_session_id == s_id)
+            is_editing = (st.session_state.editing_session_id == s_id)
             title_display = s["title"][:24]
 
             col_chat, col_dots = st.columns([5, 1])
             with col_chat:
-                if st.button(
-                    title_display,
-                    key=f"session_btn_{s_id}",
-                    use_container_width=True,
-                    type="primary" if is_active else "secondary"
-                ):
-                    st.session_state.current_session_id = s_id
-                    st.rerun()
-
-            with col_dots:
-                with st.popover("...", help="Options"):
+                if is_editing:
+                    # Inline rename input
                     new_name = st.text_input(
                         "Rename",
                         value=s["title"],
                         label_visibility="collapsed",
-                        key=f"ren_input_{s_id}"
+                        key=f"ren_input_{s_id}",
+                        on_change=None
                     )
-                    c_ren, c_del = st.columns(2)
-                    with c_ren:
-                        if st.button("Rename", key=f"save_btn_{s_id}", use_container_width=True):
+                    c_save, c_cancel = st.columns(2)
+                    with c_save:
+                        if st.button("Save", key=f"save_btn_{s_id}", use_container_width=True):
                             if new_name.strip():
-                                database.update_session_title(s_id, new_name)
-                                st.rerun()
-                    with c_del:
+                                database.update_session_title(s_id, new_name.strip())
+                            st.session_state.editing_session_id = None
+                            st.rerun()
+                    with c_cancel:
+                        if st.button("Cancel", key=f"cancel_btn_{s_id}", use_container_width=True):
+                            st.session_state.editing_session_id = None
+                            st.rerun()
+                else:
+                    if st.button(
+                        title_display,
+                        key=f"session_btn_{s_id}",
+                        use_container_width=True,
+                        type="primary" if is_active else "secondary"
+                    ):
+                        st.session_state.current_session_id = s_id
+                        st.rerun()
+
+            with col_dots:
+                if not is_editing:
+                    with st.popover("...", help="Options"):
+                        if st.button("Rename", key=f"ren_btn_{s_id}", use_container_width=True):
+                            st.session_state.editing_session_id = s_id
+                            st.rerun()
                         if st.button("Delete", key=f"del_btn_{s_id}", use_container_width=True):
                             database.delete_session(s_id)
                             if st.session_state.current_session_id == s_id:
@@ -389,13 +515,17 @@ if current_session:
                     if actual_q:
                         st.chat_message("user").markdown(actual_q)
                 
-                # Show AI response
-                st.chat_message("assistant").markdown(item["ai_response"])
+                # Show AI response — with Mermaid diagram support
+                with st.chat_message("assistant"):
+                    render_response_with_diagrams(item["ai_response"])
                 st.divider()
 
     # Continue Learning in this Session
     st.subheader("Continue Learning")
-    
+
+    # ic = input_counter — changing this key forces Streamlit to remount inputs blank
+    ic = st.session_state.input_counter
+
     tab_activity, tab_followup = st.tabs(["Next Activity", "Follow-up Question"])
 
     with tab_activity:
@@ -415,22 +545,25 @@ if current_session:
 
         act_question = ""
         act_answer = ""
-        
+
         with act_col2:
             if next_activity == "Ask Anything":
                 act_question = st.text_input(
                     "Question or doubt:",
-                    placeholder="Enter your specific question"
+                    placeholder="Enter your specific question",
+                    key=f"act_question_{ic}"
                 )
             elif next_activity == "Evaluate Answer":
                 act_question = st.text_input(
                     "Question or problem being answered:",
-                    placeholder="Enter the question or problem"
+                    placeholder="Enter the question or problem",
+                    key=f"eval_question_{ic}"
                 )
                 act_answer = st.text_area(
                     "Your Answer to Evaluate:",
                     placeholder="Write your explanation or code here for LearnMate to evaluate",
-                    height=100
+                    height=100,
+                    key=f"eval_answer_{ic}"
                 )
             else:
                 st.write(f"LearnMate will generate a structured {next_activity} for {current_session['topic']}.")
@@ -447,7 +580,7 @@ if current_session:
                     question=act_question,
                     answer=act_answer
                 )
-                
+
                 user_record_text = ""
                 if act_question and act_answer:
                     user_record_text = f"{act_question}\n\nMy Answer: {act_answer}"
@@ -470,7 +603,8 @@ if current_session:
                             user_prompt=user_record_text,
                             ai_response=resp
                         )
-                        st.success("Activity added.")
+                        # Increment counter to clear input fields on rerun
+                        st.session_state.input_counter += 1
                         st.rerun()
                     except APIError as api_err:
                         st.error(f"Gemini API Error: {api_err.message}")
@@ -481,7 +615,8 @@ if current_session:
         followup_q = st.text_area(
             "Ask a follow-up question or clarification on anything discussed above:",
             placeholder="Enter your follow-up question",
-            height=90
+            height=90,
+            key=f"followup_q_{ic}"
         )
         if st.button("Submit Follow-up", type="secondary", key="btn_followup"):
             if not active_api_key:
@@ -508,7 +643,8 @@ if current_session:
                             user_prompt=followup_q,
                             ai_response=resp
                         )
-                        st.success("Response added to session.")
+                        # Increment counter to clear input field on rerun
+                        st.session_state.input_counter += 1
                         st.rerun()
                     except APIError as api_err:
                         st.error(f"Gemini API Error: {api_err.message}")
@@ -516,12 +652,13 @@ if current_session:
                         st.error(f"Error: {str(e)}")
 
 
+
 # =========================================================
 # MODE B: CREATE NEW SESSION
 # =========================================================
 else:
     st.title("LearnMate AI")
-    st.caption("AI-guided learning assistant")
+    st.caption("AI-Powered Study Companion")
     st.divider()
 
     st.subheader("Start a New Learning Session")
@@ -531,7 +668,7 @@ else:
     with col_topic:
         new_topic = st.text_input(
             "What topic do you want to learn?",
-            placeholder="e.g., Operating Systems Virtual Memory, Dijkstra Algorithm, React Hooks, Kafka..."
+            placeholder="e.g., Binary Search Trees"
         )
 
     with col_act:

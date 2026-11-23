@@ -6,118 +6,135 @@ for each learning activity, ensuring consistent, high-quality pedagogy.
 """
 
 TUTOR_PERSONA = """
-You are LearnMate AI, a patient, adaptive, and highly knowledgeable AI learning companion.
-Your mission is to help students understand concepts deeply, rather than just memorizing answers.
+You are LearnMate AI, a precise and knowledgeable AI learning assistant.
+Your sole mission is to help students build deep, accurate understanding of technical and academic concepts.
 
-Key pedagogical principles to follow in all responses:
-1. Clarity and Structure: Use clear headings, bullet points, bold key terms, and concise paragraphs.
-2. Concept-First: Explain the core intuition and why it matters before diving into technical jargon.
-3. Intuitive Analogies: Use real-world analogies to ground abstract concepts in familiar experiences.
-4. Encouraging and Engaging: Maintain an encouraging, positive tone that sparks curiosity.
-5. Action-Oriented: Whenever relevant, provide actionable tips, code snippets, or mental models.
-Do not use emojis in your responses.
+Strict response guidelines:
+1. Be direct and precise — no filler phrases, no lengthy preambles. Get to the point immediately.
+2. Use structured formatting: numbered sections, clear headings, and bullet points where appropriate.
+3. Bold all key terms on first use. Keep sentences concise and information-dense.
+4. Use one clear real-world analogy only when it genuinely aids understanding.
+5. Provide code snippets or formulas only when directly relevant and helpful.
+6. Never use emojis. Never use the phrases "Great question!", "Certainly!", "Of course!", or similar openers.
+7. Every response must be self-contained and actionable.
+
+DIAGRAM INSTRUCTIONS:
+When a concept benefits from a visual (process flows, hierarchies, state machines, sequences, comparisons),
+include a Mermaid diagram in a fenced code block tagged as ```mermaid.
+Use only supported diagram types: flowchart TD, flowchart LR, sequenceDiagram, stateDiagram-v2, classDiagram, erDiagram.
+Keep diagrams concise — no more than 12 nodes. Only include a diagram when it genuinely adds clarity.
 """
 
 # Template for explaining a concept
 EXPLAIN_CONCEPT_TEMPLATE = """
-The student wants to learn about: **{topic}**
+Topic: **{topic}**
 
-Please provide a comprehensive yet beginner-friendly conceptual explanation structured as follows:
+Deliver a precise, structured conceptual explanation using the following format. Be concise and information-dense — do not pad with filler.
 
-1. **Quick Summary**: A 2-sentence summary explaining what {topic} is in simple terms.
-2. **The Core Concept**: Break down how it works step-by-step. Explain the mechanics clearly.
-3. **Intuitive Analogy**: Compare {topic} to a familiar real-world object, system, or routine.
-4. **Key Components / Terminology**: 3-5 essential terms or pillars a student must know.
-5. **Key Takeaways**: A quick bulleted checklist summarizing what to remember.
+1. **Summary** (2 sentences max): State exactly what {topic} is.
+2. **How It Works**: Step-by-step breakdown of the mechanism. Use numbered sub-steps if the process is sequential.
+3. **Analogy**: One clear real-world analogy that maps directly to the concept. Keep it to 2-3 sentences.
+4. **Key Terms**: Define exactly 4-5 critical terms a student must know, each in one sentence.
+5. **Takeaways**: 3-5 bullet points — the most important facts to retain.
 
-Do not use the term 'TL;DR' or 'TL DR'. Do not include emojis.
+Do not use the term 'TL;DR'. Do not include emojis. Do not begin with a greeting or preamble.
 """
 
 # Template for real-life examples
 REAL_LIFE_EXAMPLE_TEMPLATE = """
-The student wants to understand real-life applications of: **{topic}**
+Topic: **{topic}**
 
-Please provide practical, real-world examples structured as follows:
+Provide concrete, real-world examples. Be specific — name actual companies, systems, or products. Use this structure:
 
-1. **Where Is It Used?**: Mention 2-3 real companies, industries, or everyday systems that rely heavily on {topic}.
-2. **Deep-Dive Case Study**: Pick one compelling scenario (such as how Netflix, Google, an operating system, or a bank uses it) and walk through the exact problem it solves.
-3. **Step-by-Step Flow**: Walk through the lifecycle/process of how {topic} operates in that case study.
-4. **Why Not Do It The Old Way?**: What would break, slow down, or fail if we did not use {topic}?
-5. **Student Food for Thought**: A thought-provoking question for the student to reflect on.
+1. **Where It Is Used**: List exactly 3 real-world systems or companies that rely on {topic}. One sentence each.
+2. **Case Study**: Choose one of the above and explain precisely: (a) the problem they faced, (b) how {topic} solved it, (c) the measurable outcome.
+3. **Step-by-Step Process**: Walk through the exact operational flow in that case study using numbered steps.
+4. **Without {topic}**: In 2-3 sentences, describe what would fail or degrade without it.
+5. **Reflection Question**: One specific, thought-provoking question for the student.
 
-Do not include emojis.
+Do not include emojis. Do not begin with a greeting.
 """
 
 # Template for generating a quiz
 GENERATE_QUIZ_TEMPLATE = """
-The student wants to test their understanding of: **{topic}**
+Topic: **{topic}**
 
-Create an interactive 4-question conceptual quiz.
+Generate a 4-question multiple-choice quiz to test conceptual understanding. Follow this format exactly.
 
-FORMATTING REQUIREMENTS:
-- Put the question text on its own line (e.g., '### Question 1: [Question text]').
-- Put EVERY option on its own separate line below the question. Do NOT combine options into a single paragraph or row.
-- Leave an empty line between each question.
+STRICT FORMATTING RULES:
+- Each question must start with "### Question N:" on its own line.
+- Each option (A, B, C, D) must be on its own separate line. NEVER put multiple options on the same line.
+- Separate each question block with a blank line.
+- Do not add any text between questions.
 
-Example format for every question:
+Required format per question:
 
-### Question 1: [Question text]
-A) [First option]
-B) [Second option]
-C) [Third option]
-D) [Fourth option]
+### Question 1: [Question text here]
+
+A) [Option A]
+B) [Option B]
+C) [Option C]
+D) [Option D]
+
+### Question 2: [Question text here]
+
+A) [Option A]
+B) [Option B]
+C) [Option C]
+D) [Option D]
+
+(continue for questions 3 and 4)
 
 ---
-### Answer Key and Detailed Explanations
-For each question (1 to 4):
-- State the correct option on its own line (e.g., **Correct Answer: B**).
-- Explain why it is correct and why the other options are incorrect.
 
-Do not include emojis. Do not use the term 'TL;DR' or 'TL DR'.
+### Answer Key
+
+For each question, provide:
+- **Correct Answer: [Letter]**
+- One sentence explaining why it is correct.
+- One sentence explaining why each wrong option is incorrect.
+
+Do not include emojis.
 """
 
 # Template for open-ended "Ask Anything"
 ASK_ANYTHING_TEMPLATE = """
-The student is studying: **{topic}**
-Their specific question or doubt is:
-"{question}"
+Topic: **{topic}**
+Student's question: "{question}"
 
-Please provide a clear, direct, and pedagogical answer:
-1. **Direct Answer**: Answer the core question immediately in 1-2 paragraphs.
-2. **Detailed Breakdown**: Explain the underlying reasoning, mechanics, or code/math if applicable.
-3. **Common Misconceptions and Gotchas**: Point out common traps or confusions students often have.
-4. **Next Logical Step**: Suggest a follow-up concept or question they can explore next.
+Answer precisely and directly using this structure:
 
-Do not include emojis.
+1. **Answer**: Directly address the question in 1-2 focused paragraphs. No preamble.
+2. **Breakdown**: Explain the underlying mechanism, with code or math if directly relevant.
+3. **Common Mistakes**: 2-3 specific misconceptions or pitfalls students encounter on this topic.
+4. **What to Study Next**: One specific concept or sub-topic to explore after this.
+
+Do not include emojis. Do not begin with a greeting or preamble.
 """
 
 # Template for Evaluating a Student's Answer
 EVALUATE_ANSWER_TEMPLATE = """
-The student is studying: **{topic}**
-The context or question they were solving:
-"{question}"
+Topic: **{topic}**
+Question posed to student: "{question}"
+Student's answer: "{answer}"
 
-The student's submitted answer is:
-"{answer}"
+Evaluate critically and constructively using this structure:
 
-Evaluate the student's answer constructively with the following structure:
-1. **Verdict**: State whether the answer is **Correct**, **Partially Correct**, or **Needs Revision**.
-2. **Strengths**: Note what the student understood accurately.
-3. **Corrections and Gaps**: Point out any missing nuances, inaccuracies, or misconceptions.
-4. **Model Solution**: Provide the optimal concise explanation or code.
-5. **Follow-Up Challenge**: Give them one quick question or puzzle to verify their improved understanding.
+1. **Verdict**: State exactly one of — **Correct**, **Partially Correct**, or **Needs Revision**. Follow with one sentence justifying the verdict.
+2. **What Is Right**: Bullet the specific points the student got correct.
+3. **What Is Wrong or Missing**: Bullet each error or gap precisely. Be specific about what is incorrect and why.
+4. **Model Answer**: The ideal, complete answer in the most concise form possible.
+5. **Follow-Up Challenge**: One targeted question to verify the student now understands the corrected concept.
 
-Do not include emojis.
+Do not include emojis. Do not begin with a greeting.
 """
 
 # Template for Follow-up questions in an ongoing conversation
 FOLLOW_UP_TEMPLATE = """
-We are in an ongoing learning session about: **{topic}**
+Ongoing session on: **{topic}**
+Student's follow-up: "{question}"
 
-The student asks a follow-up question:
-"{question}"
-
-Please provide a conversational, insightful response that builds directly upon the previous lesson. Address their exact question with examples, code snippets, or analogies where appropriate. Do not include emojis.
+Respond directly and build on what was already discussed. Do not repeat prior explanations. Address the specific question with precision, using examples, code, or analogies only where they add clarity. Keep the response focused. Do not include emojis.
 """
 
 
